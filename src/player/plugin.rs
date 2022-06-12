@@ -2,7 +2,12 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
-use crate::shared_behavior::components::{Foot, Move, MoveDirection};
+use crate::{
+    constants::GAME_OFFSET,
+    shared_behavior::components::{Foot, Move, MoveDirection},
+};
+
+// region: --- constants
 
 const PLAYER_ASSET: &str = "player.png";
 const PLAYER_ASSET_TILE_SIZE: f32 = 32.;
@@ -11,6 +16,25 @@ const PLAYER_ASSET_TILE_ROWS: usize = 4;
 const PLAYER_BASE_SPEED: f32 = 150.;
 const PLAYER_TIME_STEP: f32 = 1. / 60.;
 const PLAYER_ASSET_TILE_SCALE: f32 = 2.;
+const PLAYER_MOVEMENT_SPEED: u64 = 105;
+
+const MOVEMENT_LEFT_LEFT: usize = 7;
+const MOVEMENT_LEFT_RIGHT: usize = 15;
+const MOVEMENT_LEFT_NEUTRAL: usize = 3;
+
+const MOVEMENT_UP_LEFT: usize = 14;
+const MOVEMENT_UP_RIGHT: usize = 6;
+const MOVEMENT_UP_NEUTRAL: usize = 2;
+
+const MOVEMENT_DOWN_LEFT: usize = 13;
+const MOVEMENT_DOWN_RIGHT: usize = 5;
+const MOVEMENT_DOWN_NEUTRAL: usize = 1;
+
+const MOVEMENT_RIGHT_LEFT: usize = 12;
+const MOVEMENT_RIGHT_RIGHT: usize = 4;
+const MOVEMENT_RIGHT_NEUTRAL: usize = 0;
+
+// endregion
 
 #[derive(Component)]
 pub struct Player;
@@ -71,7 +95,7 @@ fn setup_player(mut commands: Commands, player_atlas: Res<PlayerTextureAtlas>) {
         .insert(Player)
         .insert(Move { ..default() })
         .insert(PlayerMovementTimer(Timer::new(
-            Duration::from_millis(105),
+            Duration::from_millis(PLAYER_MOVEMENT_SPEED),
             true,
         )));
 }
@@ -111,38 +135,38 @@ fn movement_texture_system(
         match direction {
             MoveDirection::Left => {
                 if let Some(Foot::Left) = movement.foot {
-                    index = 7;
+                    index = MOVEMENT_LEFT_LEFT;
                 } else if let Some(Foot::Right) = movement.foot {
-                    index = 15;
+                    index = MOVEMENT_LEFT_RIGHT;
                 } else {
-                    index = 3;
+                    index = MOVEMENT_LEFT_NEUTRAL;
                 }
             }
             MoveDirection::Up => {
                 if let Some(Foot::Left) = movement.foot {
-                    index = 14;
+                    index = MOVEMENT_UP_LEFT;
                 } else if let Some(Foot::Right) = movement.foot {
-                    index = 6;
+                    index = MOVEMENT_UP_RIGHT;
                 } else {
-                    index = 2;
+                    index = MOVEMENT_UP_NEUTRAL;
                 }
             }
             MoveDirection::Down => {
                 if let Some(Foot::Left) = movement.foot {
-                    index = 13;
+                    index = MOVEMENT_DOWN_LEFT;
                 } else if let Some(Foot::Right) = movement.foot {
-                    index = 5;
+                    index = MOVEMENT_DOWN_RIGHT;
                 } else {
-                    index = 1;
+                    index = MOVEMENT_DOWN_NEUTRAL;
                 }
             }
             MoveDirection::Right => {
                 if let Some(Foot::Left) = movement.foot {
-                    index = 12;
+                    index = MOVEMENT_RIGHT_LEFT;
                 } else if let Some(Foot::Right) = movement.foot {
-                    index = 4;
+                    index = MOVEMENT_RIGHT_RIGHT;
                 } else {
-                    index = 0;
+                    index = MOVEMENT_RIGHT_NEUTRAL;
                 }
             }
         }
@@ -184,10 +208,10 @@ fn movement_translation_system(
     let window = windows.get_primary().unwrap();
 
     // TODO make the camera follow the player
-    if translation.x.abs() < window.width() / 2. - 20. {
+    if translation.x.abs() < window.width() / 2. - GAME_OFFSET {
         transform.translation.x = translation.x;
     }
-    if translation.y.abs() < window.height() / 2. - 20. {
+    if translation.y.abs() < window.height() / 2. - GAME_OFFSET {
         transform.translation.y = translation.y;
     }
 }
