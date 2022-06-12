@@ -14,9 +14,8 @@ const PLAYER_ASSET_TILE_SIZE: f32 = 32.;
 const PLAYER_ASSET_TILE_COLUMNS: usize = 4;
 const PLAYER_ASSET_TILE_ROWS: usize = 4;
 const PLAYER_BASE_SPEED: f32 = 150.;
-const PLAYER_TIME_STEP: f32 = 1. / 60.;
 const PLAYER_ASSET_TILE_SCALE: f32 = 2.;
-const PLAYER_MOVEMENT_SPEED: u64 = 105;
+const PLAYER_MOVEMENT_SPEED: u64 = 90;
 
 const MOVEMENT_LEFT_LEFT: usize = 7;
 const MOVEMENT_LEFT_RIGHT: usize = 15;
@@ -123,6 +122,47 @@ fn movement_key_input(input: Res<Input<KeyCode>>, mut query: Query<&mut Move, Wi
     }
 }
 
+fn pick_movement(direction: &MoveDirection, foot: &Option<Foot>) -> usize {
+    match direction {
+        MoveDirection::Left if let Some(Foot::Left) = foot => {
+            MOVEMENT_LEFT_LEFT
+        }
+        MoveDirection::Left if let Some(Foot::Right) = foot => {
+            MOVEMENT_LEFT_RIGHT
+        }
+        MoveDirection::Left  => {
+            MOVEMENT_LEFT_NEUTRAL
+        }
+        MoveDirection::Up if let Some(Foot::Left) = foot => {
+            MOVEMENT_UP_LEFT
+        }
+        MoveDirection::Up if let Some(Foot::Right) = foot => {
+            MOVEMENT_UP_RIGHT
+            }
+        MoveDirection::Up  => {
+            MOVEMENT_UP_NEUTRAL
+        }
+        MoveDirection::Down if let Some(Foot::Left) = foot => {
+            MOVEMENT_DOWN_LEFT
+        }
+        MoveDirection::Down if let Some(Foot::Right) = foot => {
+            MOVEMENT_DOWN_RIGHT
+            }
+        MoveDirection::Down  => {
+            MOVEMENT_DOWN_NEUTRAL
+        }
+        MoveDirection::Right if let Some(Foot::Left) = foot => {
+            MOVEMENT_RIGHT_LEFT
+        }
+        MoveDirection::Right if let Some(Foot::Right) = foot => {
+            MOVEMENT_RIGHT_RIGHT
+            }
+        MoveDirection::Right  => {
+            MOVEMENT_RIGHT_NEUTRAL
+        }
+    }
+}
+
 fn movement_texture_system(
     timer: Res<Time>,
     mut query: Query<(&mut PlayerMovementTimer, &mut Move, &mut TextureAtlasSprite)>,
@@ -131,48 +171,8 @@ fn movement_texture_system(
 
     if let Some(direction) = &movement.direction {
         player_timer.tick(timer.delta());
-        let index;
-        match direction {
-            MoveDirection::Left => {
-                if let Some(Foot::Left) = movement.foot {
-                    index = MOVEMENT_LEFT_LEFT;
-                } else if let Some(Foot::Right) = movement.foot {
-                    index = MOVEMENT_LEFT_RIGHT;
-                } else {
-                    index = MOVEMENT_LEFT_NEUTRAL;
-                }
-            }
-            MoveDirection::Up => {
-                if let Some(Foot::Left) = movement.foot {
-                    index = MOVEMENT_UP_LEFT;
-                } else if let Some(Foot::Right) = movement.foot {
-                    index = MOVEMENT_UP_RIGHT;
-                } else {
-                    index = MOVEMENT_UP_NEUTRAL;
-                }
-            }
-            MoveDirection::Down => {
-                if let Some(Foot::Left) = movement.foot {
-                    index = MOVEMENT_DOWN_LEFT;
-                } else if let Some(Foot::Right) = movement.foot {
-                    index = MOVEMENT_DOWN_RIGHT;
-                } else {
-                    index = MOVEMENT_DOWN_NEUTRAL;
-                }
-            }
-            MoveDirection::Right => {
-                if let Some(Foot::Left) = movement.foot {
-                    index = MOVEMENT_RIGHT_LEFT;
-                } else if let Some(Foot::Right) = movement.foot {
-                    index = MOVEMENT_RIGHT_RIGHT;
-                } else {
-                    index = MOVEMENT_RIGHT_NEUTRAL;
-                }
-            }
-        }
-
         if player_timer.finished() {
-            alias_sprite.index = index;
+            alias_sprite.index = pick_movement(direction, &movement.foot);
             movement.toggle_foot();
         }
     } else {
@@ -184,6 +184,7 @@ fn movement_texture_system(
 }
 
 fn movement_translation_system(
+    time: Res<Time>,
     mut query: Query<(&mut Transform, &Move), With<Player>>,
     windows: Res<Windows>,
 ) {
@@ -192,16 +193,16 @@ fn movement_translation_system(
     if let Some(direction) = &movement.direction {
         match direction {
             MoveDirection::Up => {
-                translation.y += PLAYER_BASE_SPEED * PLAYER_TIME_STEP;
+                translation.y += PLAYER_BASE_SPEED * time.delta_seconds();
             }
             MoveDirection::Down => {
-                translation.y -= PLAYER_BASE_SPEED * PLAYER_TIME_STEP;
+                translation.y -= PLAYER_BASE_SPEED * time.delta_seconds();
             }
             MoveDirection::Left => {
-                translation.x -= PLAYER_BASE_SPEED * PLAYER_TIME_STEP;
+                translation.x -= PLAYER_BASE_SPEED * time.delta_seconds();
             }
             MoveDirection::Right => {
-                translation.x += PLAYER_BASE_SPEED * PLAYER_TIME_STEP;
+                translation.x += PLAYER_BASE_SPEED * time.delta_seconds();
             }
         }
     }
