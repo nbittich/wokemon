@@ -88,16 +88,14 @@ fn movement_key_input(input: Res<Input<KeyCode>>, mut query: Query<&mut Move, Wi
             player_move.direction = None;
             player_move.foot = None;
         }
-    } else {
-        if input.pressed(KeyCode::Right) {
-            player_move.direction = Some(MoveDirection::Right);
-        } else if input.pressed(KeyCode::Left) {
-            player_move.direction = Some(MoveDirection::Left);
-        } else if input.pressed(KeyCode::Up) {
-            player_move.direction = Some(MoveDirection::Up);
-        } else if input.pressed(KeyCode::Down) {
-            player_move.direction = Some(MoveDirection::Down);
-        }
+    } else if input.pressed(KeyCode::Right) {
+        player_move.direction = Some(MoveDirection::Right);
+    } else if input.pressed(KeyCode::Left) {
+        player_move.direction = Some(MoveDirection::Left);
+    } else if input.pressed(KeyCode::Up) {
+        player_move.direction = Some(MoveDirection::Up);
+    } else if input.pressed(KeyCode::Down) {
+        player_move.direction = Some(MoveDirection::Down);
     }
 }
 
@@ -161,7 +159,10 @@ fn movement_texture_system(
     }
 }
 
-fn movement_translation_system(mut query: Query<(&mut Transform, &Move), With<Player>>, windows: Res<Windows>) {
+fn movement_translation_system(
+    mut query: Query<(&mut Transform, &Move), With<Player>>,
+    windows: Res<Windows>,
+) {
     let (mut transform, movement) = query.single_mut();
     let mut translation = transform.translation;
     if let Some(direction) = &movement.direction {
@@ -183,10 +184,10 @@ fn movement_translation_system(mut query: Query<(&mut Transform, &Move), With<Pl
     let window = windows.get_primary().unwrap();
 
     // TODO make the camera follow the player
-    if translation.x.abs() < window.width() / 2. -20.{
+    if translation.x.abs() < window.width() / 2. - 20. {
         transform.translation.x = translation.x;
     }
-    if translation.y.abs() < window.height() / 2. -20.{
+    if translation.y.abs() < window.height() / 2. - 20. {
         transform.translation.y = translation.y;
     }
 }
