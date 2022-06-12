@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::prelude::*;
+use bevy::{ecs::event::Events, prelude::*, window::WindowResized};
 
 use crate::{
     constants::GAME_OFFSET,
@@ -58,6 +58,7 @@ impl Plugin for PlayerPlugin {
             )
             .add_system(movement_key_input)
             .add_system(movement_translation_system)
+            .add_system(set_position_player_on_resize)
             .add_system(movement_texture_system);
     }
 }
@@ -214,5 +215,36 @@ fn movement_translation_system(
     }
     if translation.y.abs() < window.height() / 2. - GAME_OFFSET {
         transform.translation.y = translation.y;
+    }
+}
+
+fn set_position_player_on_resize(
+    resize_event: Res<Events<WindowResized>>,
+    mut query: Query<&mut Transform, With<Player>>,
+) {
+    let mut transform = query.single_mut();
+    let mut reader = resize_event.get_reader();
+
+    for e in reader.iter(&resize_event) {
+        let left_bound = -(e.width / 2. - GAME_OFFSET);
+        let right_bound = left_bound.abs();
+        let down_bound = -(e.height / 2. - GAME_OFFSET);
+        let upper_bound = down_bound.abs();
+
+        let curr_x = transform.translation.x;
+        let curr_y = transform.translation.y;
+
+        if curr_x > right_bound {
+            transform.translation.x = right_bound;
+        }
+        if curr_x < left_bound {
+            transform.translation.x = left_bound;
+        }
+        if curr_y > upper_bound {
+            transform.translation.y = upper_bound;
+        }
+        if curr_y < down_bound {
+            transform.translation.y = down_bound;
+        }
     }
 }
